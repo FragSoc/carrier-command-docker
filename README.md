@@ -22,15 +22,15 @@ docker run -d -p 25565:25565/udp -p 25566:25566/udp -p 25567:25567/udp fragsoc/c
 
 ### Building
 
-The image takes several build args, passed with the `BUILD_ARGS` `make` var.
+The image takes several build args, passed with the `DOCKER_ARGS` `make` var (eg. `make "DOCKER_ARGS=--build-arg UID=1000 --build-arg APPID=10"`).
 
 Argument Key | Default Value | Description
 ---|---|---
 `APPID` | `1489630` | The steam appid to install, there's little reason to change this
 `STEAM_BETAS` | (Blank) | A string to pass to `steamcmd` to download any beta versions of the game, eg. `-beta mybeta -betapassword letmein`
-<!-- `STEAM_EPOCH` | (Blank) | Used to rebuild the image when a new game version is released, retaining the cached `apt` packages etc. Value itself is ignored. When you want to rebuild the image for the latest version of the game, use any unique value (the current timestamp is a good idea). -->
 `UID` | `999` | The user ID to assign to the created user within the container
 `GID` | `999` | The group ID to assign to the created user's primary group within the container
+<!-- `STEAM_EPOCH` | (Blank) | Used to rebuild the image when a new game version is released, retaining the cached `apt` packages etc. Value itself is ignored. When you want to rebuild the image for the latest version of the game, use any unique value (the current timestamp is a good idea). -->
 
 ### Running
 
