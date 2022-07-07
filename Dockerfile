@@ -1,59 +1,43 @@
-FROM steamcmd/steamcmd AS steambuild
-# REPO_SETUP: Add maintainers
+FROM fragsoc/steamcmd-wine-xvfb
+# Maintainer: Laura Demkowicz-Duffy <dev@demkowiczduffy.co.uk>
 
 ARG UID=999
 ARG GID=999
 
 ENV CONFIG_LOC="/config"
-ENV INSTALL_LOC="/GAME_NAME"
+ENV LOG_LOC="/logs"
+ENV INSTALL_LOC="/carriercommand"
 ENV HOME=${INSTALL_LOC}
 ENV DEBIAN_FRONTEND="noninteractive"
 
 USER root
 
-# REPO_SETUP: Append any packages that your server needs to the
-# REPO_SETUP: `apt install` line.
 RUN apt update && \
     # Install libsdl, used by steamcmd
-    apt install -y --no-install-recommends libsdl2-2.0-0
+    apt install -y --no-install-recommends libsdl2-2.0-0 winbind
 
 # Setup directory structure and user permissions
 RUN mkdir -p $INSTALL_LOC && \
-    groupadd -g $GID GAME_NAME && \
-    useradd -m -s /bin/false -u $UID -g $GID GAME_NAME && \
-    mkdir -p $CONFIG_LOC $INSTALL_LOC && \
-    chown -R GAME_NAME:GAME_NAME $INSTALL_LOC $CONFIG_LOC
+    groupadd -g $GID carriercommand && \
+    useradd -m -s /bin/false -u $UID -g $GID carriercommand
 
-USER GAME_NAME
-
-# REPO_SETUP: You might consider installing steam appid 1007 ("+app_update 1007 validate \")
-# REPO_SETUP: alongside your game here if your game needs the steam libraries
-# REPO_SETUP: to appear in the server browser etc.
-
-# REPO_SETUP: If your game is windows only, you *might* be able to run it inside a linux container
-# REPO_SETUP: with wine and xvfb-run. If so, add a "+@sSteamCmdForcePlatformType windows \"
-# REPO_SETUP: line to this steamcmd command, and install xvfb and wine.
-# REPO_SETUP: Alternatively, see https://github.com/FragSoc/steamcmd-wine-xvfb-docker;
-# REPO_SETUP: you can use this as the base image for this template if you want :)
-# REPO_SETUP: (you'll still need that that platform force steamcmd command)
-
-# Install the GAME_NAME server
-# REPO_SETUP: Get the appid of the dedicated server from steamdb or similar
-ARG APPID=<YOUR APPID HERE>
-ARG STEAM_BETA
-RUN steamcmd \
-        +login anonymous \
-        +force_install_dir $INSTALL_LOC \
-        +app_update $APPID $STEAM_BETA validate \
-        +quit && \
-    # REPO_SETUP: you will probably want to symlink the game's default config directory
-    # REPO_SETUP: to $CONFIG_LOC here
+# Install the carriercommand server
+ARG APPID=1489630
+ARG STEAM_BETA=""
+COPY ./game_files $INSTALL_LOC
+COPY ./docker-entrypoint.sh /entrypoint.sh
+COPY ./healthcheck.sh /healthcheck.sh
+RUN chown -R carriercommand:carriercommand $INSTALL_LOC && \
+    chmod +x /entrypoint.sh /healthcheck.sh && \
+    ln -s $CONFIG_LOC/server_config.xml $INSTALL_LOC/server_config.xml
 
 # I/O
-VOLUME $CONFIG_LOC
-# REPO_SETUP: Add any ports you might need. Don't forget to append with /udp if necessary
+VOLUME $CONFIG_LOC $LOG_LOC
+# We can't do arithmetic here so the ports are hardcoded :(
+EXPOSE 25565/udp 25566/udp 25567/udp
 
 # Expose and run
-USER GAME_NAME
+USER carriercommand
 WORKDIR $INSTALL_LOC
-# REPO_SETUP: Add an entrypoint for the game
+HEALTHCHECK CMD /healthcheck.sh
+ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
