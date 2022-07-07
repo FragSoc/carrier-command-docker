@@ -14,7 +14,7 @@ A [docker](https://www.docker.com/) image for running a dedicated server for the
 ### Quickstart
 
 ```bash
-git clone https://github.com/Laura7089/carrier-command-docker
+git clone https://github.com/FragSoc/carrier-command-docker
 cd carrier-command-docker
 make STEAM_USERNAME=your_steam_username
 docker run -d -p 25565:25565/udp -p 25566:25566/udp -p 25567:25567/udp fragsoc/carrier-command
