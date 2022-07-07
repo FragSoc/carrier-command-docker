@@ -1,8 +1,10 @@
-STEAM_BETA := ""
 STEAM_USERNAME := ""
+STEAM_BETA := ""
 
 DOCKER_COMMAND := "docker"
 IMAGE_NAME := "fragsoc/carrier-command"
+
+.PHONY: build clean
 
 build: game_files
 	${DOCKER_COMMAND} build -t ${IMAGE_NAME} .
